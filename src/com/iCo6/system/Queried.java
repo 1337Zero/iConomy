@@ -30,6 +30,7 @@ import com.iCo6.util.org.apache.commons.dbutils.ResultSetHandler;
  *
  * @author Nijikokun
  */
+@SuppressWarnings("deprecation")
 public class Queried {
 	static Mini database;
 	static InventoryDB inventory;

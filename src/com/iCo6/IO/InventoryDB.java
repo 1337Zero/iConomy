@@ -30,6 +30,7 @@ import com.iCo6.util.nbt.Tag;
  * @author Nijikokun
  * @author RasTaIARI
  */
+@SuppressWarnings("deprecation")
 public class InventoryDB {
 
     private File dataDir;
@@ -87,7 +88,6 @@ public class InventoryDB {
         }
     }
 
-    @SuppressWarnings("deprecation")
 	private ItemStack[] readInventory(String name) {
         try {
             NBTInputStream in = new NBTInputStream(new FileInputStream(new File(dataDir, name + ".dat")));
@@ -113,7 +113,6 @@ public class InventoryDB {
         }
     }
 
-    @SuppressWarnings("deprecation")
 	private void writeInventory(String name, ItemStack[] stacks) {
         try {
             NBTInputStream in = new NBTInputStream(new FileInputStream(new File(dataDir, name + ".dat")));
@@ -153,7 +152,6 @@ public class InventoryDB {
         }
     }
 
-    @SuppressWarnings("deprecation")
 	private void setBalance(ItemStack[] contents, double balance) {
         int major = Constants.Nodes.DatabaseMajorItem.getInteger();
         int minor = Constants.Nodes.DatabaseMinorItem.getInteger();
@@ -194,12 +192,10 @@ public class InventoryDB {
         }
 
         // Make sure nothing is left.
-        if (balance > 0) {
+        if (balance > 0)
             throw new RuntimeException("Unable to set balance, inventory is overfull");
-        }
     }
 
-    @SuppressWarnings("deprecation")
 	private double getBalance(ItemStack[] contents) {
         double balance = 0;
         int major = Constants.Nodes.DatabaseMajorItem.getInteger();
