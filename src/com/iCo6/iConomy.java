@@ -383,32 +383,6 @@ public class iConomy extends JavaPlugin implements Listener {
 		}
 	}
 
-	/*
-	public boolean hasPermissions(CommandSender sender, String command) {
-		if(sender instanceof Player) {
-			Player player = (Player)sender;
-
-			if(Commands.hasPermission(command)) {
-				String node = Commands.getPermission(command);
-
-				if(node == null)
-					return true;
-				try {
-					Permission perm = new Permission(node);
-					if(player.hasPermission(perm) || player.hasPermission(node) || player.hasPermission(node.toLowerCase()))
-						return true;
-
-					return false;
-				} catch(Exception e) {
-					return player.isOp();
-				}
-			}
-		}
-
-		return true;
-	}
-	 */
-
 	/**
 	 * Formats the holding balance in a human readable form with the currency attached:<br /><br />
 	 * 20000.53 = 20,000.53 Coin<br />
