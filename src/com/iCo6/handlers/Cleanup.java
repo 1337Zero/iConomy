@@ -27,7 +27,7 @@ public class Cleanup extends Handler {
 		Double amount;
 		
         try {
-        	amount = arguments.get("pocet").getDoubleValue();
+        	amount = arguments.get("amount").getDoubleValue();
         } catch(NumberFormatException e) {
             throw new InvalidUsage("Invalid <white>amount<rose>, must be double.");
         }

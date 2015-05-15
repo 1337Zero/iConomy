@@ -165,7 +165,7 @@ public class iConomy extends JavaPlugin implements Listener {
 		Commands.setPermission("empty", "iConomy.accounts.empty");
 		Commands.setHelp("empty", new String[] { "", "Empty database of accounts." });
 		
-		Commands.add("/money -clean|cleanup +pocet", new Cleanup(this));
+		Commands.add("/money -clean|cleanup +amount", new Cleanup(this));
 		Commands.setPermission("cleanup", "iConomy.cleanup");
 		Commands.setHelp("cleanup", new String[] { " [amount]", "Clean all accounts with lower holdings than specified." });
 
