@@ -6,7 +6,6 @@ import com.iCo6.iConomy;
 import com.iCo6.util.Messaging;
 import com.iCo6.util.Template;
 
-@SuppressWarnings("deprecation")
 public class Account {
     public String name;
 

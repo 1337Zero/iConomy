@@ -12,7 +12,6 @@ import com.iCo6.util.Common;
 import com.iCo6.util.Messaging;
 import com.iCo6.util.Template;
 
-@SuppressWarnings("deprecation")
 public class Holdings {
     private String name;
     //private Queried database = new Queried();

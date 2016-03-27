@@ -24,7 +24,6 @@ public class Payment extends Handler {
         super(plugin, iConomy.Template);
     }
 
-    @SuppressWarnings("deprecation")
 	@Override
     public boolean perform(CommandSender sender, LinkedHashMap<String, Argument> arguments) throws InvalidUsage {
         if(!hasPermissions(sender, "pay"))
