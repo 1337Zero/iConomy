@@ -47,14 +47,14 @@ public class Give extends Handler {
         if(Double.isInfinite(amount) || Double.isNaN(amount))
             throw new InvalidUsage("Invalid <white>amount<rose>, must be double.");
 
-        if(!Accounts.exists(name)) {
+        if(!Accounts.existsOldMethode(name)) {
             template.set(Template.Node.ERROR_ACCOUNT);
             template.add("name", name);
 
             Messaging.send(sender, tag + template.parse());
             return false;
         }
-
+        
         Account account = new Account(name);
         account.getHoldings().add(amount);
 

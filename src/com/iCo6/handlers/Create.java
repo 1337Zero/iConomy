@@ -27,7 +27,7 @@ public class Create extends Handler {
 			return false;	
         }
 
-        String name = arguments.get("name").getStringValue();
+       /* String name = arguments.get("name").getStringValue();
         String tag = template.color(Template.Node.TAG_MONEY);
 
         if(name.equals("0"))
@@ -48,7 +48,8 @@ public class Create extends Handler {
 
         template.set(Template.Node.ACCOUNTS_CREATE);
         template.add("name", name);
-        Messaging.send(sender, tag + template.parse());
+        Messaging.send(sender, tag + template.parse());*/
+        sender.sendMessage("Disable due incompatible with >1.13.2");
         return false;
     }
 }

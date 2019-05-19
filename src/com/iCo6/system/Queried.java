@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -42,6 +43,15 @@ public class Queried {
 			return null;
 		}
 	};
+	static ResultSetHandler<UUID> returnUUID = new ResultSetHandler<UUID>() {
+		public UUID handle(ResultSet rs) throws SQLException {
+			if(rs.next())
+				return UUID.fromString(rs.getString("uuid"));
+
+			return null;
+		}
+	};
+	
 
 	static ResultSetHandler<List<String>> returnList = new ResultSetHandler<List<String>>() {
 		private List<String> accounts;
@@ -49,7 +59,7 @@ public class Queried {
 			accounts = new ArrayList<String>();
 
 			while(rs.next())
-				accounts.add(rs.getString("username"));
+				accounts.add(rs.getString("username") + ":" + rs.getString("uuid"));
 
 			return accounts;
 		}
@@ -65,6 +75,18 @@ public class Queried {
 	static ResultSetHandler<Double> returnBalance = new ResultSetHandler<Double>() {
 		public Double handle(ResultSet rs) throws SQLException {
 			if(rs.next()) return rs.getDouble("balance");
+			return null;
+		}
+	};
+	static ResultSetHandler<Integer> returnPID = new ResultSetHandler<Integer>() {
+		public Integer handle(ResultSet rs) throws SQLException {
+			if(rs.next()) return rs.getInt("pid");
+			return -1;
+		}
+	};
+	static ResultSetHandler<Integer> returnID = new ResultSetHandler<Integer>() {
+		public Integer handle(ResultSet rs) throws SQLException {
+			if(rs.next()) return rs.getInt("id");
 			return null;
 		}
 	};
@@ -166,7 +188,8 @@ public class Queried {
 
 				try{
 					String t = Constants.Nodes.DatabaseTable.toString();
-					total = run.query(c, "SELECT username FROM " + t + " WHERE status <> 1 ORDER BY balance DESC LIMIT " + amount, returnList);
+					String t2 = Constants.Nodes.DatabaseUUIDTable.toString();
+					total = run.query(c, "SELECT username,uuid join " + t2 + " ON(pid=id) FROM " + t + " WHERE status <> 1 ORDER BY balance DESC LIMIT " + amount, returnList);
 				} catch (SQLException ex) {
 					System.out.println("[iConomy] Error issueing SQL query: " + ex);
 				} finally {
@@ -179,10 +202,11 @@ public class Queried {
 
 		for (Iterator<String> it = total.iterator(); it.hasNext();) {
 			String player = it.next();
+			String uuid = player.split(":")[1];
 			if(useMiniDB() || useInventoryDB() || useOrbDB()) {
-				accounts.add(Accounts.get(player));
+				accounts.add(Accounts.get(player,UUID.fromString(uuid)));
 			} else {
-				finals.add(new Account(player));
+				finals.add(new Account(player,UUID.fromString(uuid)));
 			}
 		}
 
@@ -202,6 +226,61 @@ public class Queried {
 		}
 
 		return finals;
+	}
+	static boolean insertAccountUUID(String name,UUID uuid,int pid) {
+		try {
+			QueryRunner run = new QueryRunner();
+			Connection c = iConomy.Database.getConnection();
+
+			try{
+				//INSERT INTO `iconomy_uuid`(`pid`, `username`, `uuid`) VALUES ([value-1],[value-2],[value-3])
+				String t = Constants.Nodes.DatabaseUUIDTable.toString();
+				Integer amount = run.update(c, "INSERT INTO " + t + "(pid,username, uuid) values (?,?, ?)", pid,name.toLowerCase(), uuid.toString());
+
+				if(amount > 0){
+					return true;
+				}
+			} catch (SQLException ex) {
+				System.out.println("[iConomy] Error issueing SQL query: " + ex);
+				ex.printStackTrace();
+			} finally {
+				DbUtils.close(c);
+			}
+		} catch (SQLException ex) {
+			System.out.println("[iConomy] Database Error: " + ex);
+			ex.printStackTrace();
+		}		
+		return false;
+	}
+	/*
+	 * Updates the name from the given uuid
+	 */
+	static boolean updateAccountUUID(String name,UUID uuid,int pid) {
+		try {
+			QueryRunner run = new QueryRunner();
+			Connection c = iConomy.Database.getConnection();
+
+			try{
+				//UPDATE `iconomy` SET `username`=? WHERE username = ?
+				//String t = Constants.Nodes.DatabaseUUIDTable.toString();
+				//Integer amount = run.update(c, "INSERT INTO " + t + "(pid,username, uuid) values (?,?, ?)", pid,name.toLowerCase(), uuid.toString());
+				Integer amount = run.update(c,"UPDATE `iconomy` SET `username`=? WHERE id = ?",name,pid);				
+				Integer amount2 = run.update(c,"UPDATE `iconomy_uuid` SET `username`=? WHERE pid = ?",name,pid);
+				if(amount > 0 && amount2 > 0){
+					return true;
+				}
+			} catch (SQLException ex) {
+				System.out.println("[iConomy] Error issueing SQL query: " + ex);
+				ex.printStackTrace();
+			} finally {
+				DbUtils.close(c);
+			}
+		} catch (SQLException ex) {
+			System.out.println("[iConomy] Database Error: " + ex);
+			ex.printStackTrace();
+		}		
+		return false;
+	
 	}
 
 	static boolean createAccount(String name, Double balance, Integer status) {
@@ -242,11 +321,13 @@ public class Queried {
 				}
 			} catch (SQLException ex) {
 				System.out.println("[iConomy] Error issueing SQL query: " + ex);
+				ex.printStackTrace();
 			} finally {
 				DbUtils.close(c);
 			}
 		} catch (SQLException ex) {
 			System.out.println("[iConomy] Database Error: " + ex);
+			ex.printStackTrace();
 		}
 
 		return false;
@@ -278,11 +359,13 @@ public class Queried {
 					removed = true;
 			} catch (SQLException ex) {
 				System.out.println("[iConomy] Error issueing SQL query: " + ex);
+				ex.printStackTrace();
 			} finally {
 				DbUtils.close(c);
 			}
 		} catch (SQLException ex) {
 			System.out.println("[iConomy] Database Error: " + ex);
+			ex.printStackTrace();
 		}
 
 		return removed;
@@ -312,16 +395,191 @@ public class Queried {
 				exists = run.query(c, "SELECT id FROM " + t + " WHERE username=?", returnBoolean, name.toLowerCase());
 			} catch (SQLException ex) {
 				System.out.println("[iConomy] Error issueing SQL query: " + ex);
+				ex.printStackTrace();
 			} finally {
 				DbUtils.close(c);
 			}
 		} catch (SQLException ex) {
 			System.out.println("[iConomy] Database Error: " + ex);
+			ex.printStackTrace();
 		}
 
 		return exists;
 	}
 
+	static boolean hasUUID(UUID uuid){
+		boolean uuidfound = false;
+		try {
+			QueryRunner run = new QueryRunner();
+			Connection c = iConomy.Database.getConnection();
+
+			try{
+				String t = Constants.Nodes.DatabaseUUIDTable.toString();
+				uuidfound = run.query(c, "SELECT uuid FROM " + t + " WHERE uuid=?", returnUUID, uuid.toString()) != null;
+			} catch (SQLException ex) {
+				System.out.println("[iConomy] Error issueing SQL query: " + ex);
+				ex.printStackTrace();
+			} finally {
+				DbUtils.close(c);
+			}
+		} catch (SQLException ex) {
+			System.out.println("[iConomy] Database Error: " + ex);
+			ex.printStackTrace();
+		}
+		
+		return uuidfound;
+	}
+	static UUID getUUID(String name){
+		UUID uuidfound = null;
+		try {
+			QueryRunner run = new QueryRunner();
+			Connection c = iConomy.Database.getConnection();
+
+			try{
+				String t = Constants.Nodes.DatabaseUUIDTable.toString();
+				uuidfound = run.query(c, "SELECT uuid FROM " + t + " WHERE username=?", returnUUID, name.toString());
+			} catch (SQLException ex) {
+				System.out.println("[iConomy] Error issueing SQL query: " + ex);
+				ex.printStackTrace();
+			} finally {
+				DbUtils.close(c);
+			}
+		} catch (SQLException ex) {
+			System.out.println("[iConomy] Database Error: " + ex);
+			ex.printStackTrace();
+		}
+		
+		return uuidfound;
+	}
+	
+	static int getID(String name) {
+		/*int balance = -1;
+
+		if(!hasAccount(name))
+			return balance;
+
+		if(useMiniDB() || useInventoryDB() || useOrbDB()) {
+			if(useInventoryDB())
+				if(inventory.dataExists(name))
+					return inventory.getBalance(name);
+
+			if(useOrbDB())
+				if(iConomy.Server.getPlayer(name) != null)
+					return iConomy.Server.getPlayer(name).getTotalExperience();
+
+			if(database.hasIndex(name))
+				return database.getArguments(name).getDouble("balance");
+
+			return balance;
+		}*/
+		int pid = -1;
+		try {
+			QueryRunner run = new QueryRunner();
+			Connection c = iConomy.Database.getConnection();
+
+			try{
+				String t = Constants.Nodes.DatabaseTable.toString();
+				pid = run.query(c, "SELECT id FROM " + t + " WHERE username=?", returnID, name.toLowerCase());
+			} catch (SQLException ex) {
+				System.out.println("[iConomy] Error issueing SQL query: " + ex);
+				ex.printStackTrace();
+			} finally {
+				DbUtils.close(c);
+			}
+		} catch (SQLException ex) {
+			System.out.println("[iConomy] Database Error: " + ex);
+			ex.printStackTrace();
+		}
+
+		return pid;
+	}
+	static int getPID(String name) {
+		/*int balance = -1;
+
+		if(!hasAccount(name))
+			return balance;
+
+		if(useMiniDB() || useInventoryDB() || useOrbDB()) {
+			if(useInventoryDB())
+				if(inventory.dataExists(name))
+					return inventory.getBalance(name);
+
+			if(useOrbDB())
+				if(iConomy.Server.getPlayer(name) != null)
+					return iConomy.Server.getPlayer(name).getTotalExperience();
+
+			if(database.hasIndex(name))
+				return database.getArguments(name).getDouble("balance");
+
+			return balance;
+		}*/
+		int pid = -1;
+		try {
+			QueryRunner run = new QueryRunner();
+			Connection c = iConomy.Database.getConnection();
+
+			try{
+				String t = Constants.Nodes.DatabaseTable.toString();
+				System.out.println(name );
+				System.out.println(t);
+				System.out.println(c);
+				System.out.println(returnPID);				
+				pid = run.query(c, "SELECT id FROM " + t + " WHERE username=?", returnID, name);
+			} catch (SQLException ex) {
+				System.out.println("[iConomy] Error issueing SQL query: " + ex);
+				ex.printStackTrace();
+			} finally {
+				DbUtils.close(c);
+			}
+		} catch (SQLException ex) {
+			System.out.println("[iConomy] Database Error: " + ex);
+			ex.printStackTrace();
+		}
+
+		return pid;
+	}
+	static int getPID(UUID uuid) {
+		/*int balance = -1;
+
+		if(!hasAccount(name))
+			return balance;
+
+		if(useMiniDB() || useInventoryDB() || useOrbDB()) {
+			if(useInventoryDB())
+				if(inventory.dataExists(name))
+					return inventory.getBalance(name);
+
+			if(useOrbDB())
+				if(iConomy.Server.getPlayer(name) != null)
+					return iConomy.Server.getPlayer(name).getTotalExperience();
+
+			if(database.hasIndex(name))
+				return database.getArguments(name).getDouble("balance");
+
+			return balance;
+		}*/
+		int pid = -1;
+		try {
+			QueryRunner run = new QueryRunner();
+			Connection c = iConomy.Database.getConnection();
+
+			try{
+				String t = Constants.Nodes.DatabaseUUIDTable.toString();
+				pid = run.query(c, "SELECT pid FROM " + t + " WHERE uuid=?", returnPID, uuid.toString());
+			} catch (SQLException ex) {
+				System.out.println("[iConomy] Error issueing SQL query: " + ex);
+				ex.printStackTrace();
+			} finally {
+				DbUtils.close(c);
+			}
+		} catch (SQLException ex) {
+			System.out.println("[iConomy] Database Error: " + ex);
+			ex.printStackTrace();
+		}
+
+		return pid;
+	}
+	
 	static double getBalance(String name) {
 		Double balance = Constants.Nodes.Balance.getDouble();
 
@@ -352,11 +610,13 @@ public class Queried {
 				balance = run.query(c, "SELECT balance FROM " + t + " WHERE username=?", returnBalance, name.toLowerCase());
 			} catch (SQLException ex) {
 				System.out.println("[iConomy] Error issueing SQL query: " + ex);
+				ex.printStackTrace();
 			} finally {
 				DbUtils.close(c);
 			}
 		} catch (SQLException ex) {
 			System.out.println("[iConomy] Database Error: " + ex);
+			ex.printStackTrace();
 		}
 
 		return balance;
@@ -441,11 +701,13 @@ public class Queried {
 				run.update(c, "UPDATE " + t + " SET balance=? WHERE username=?", balance, name.toLowerCase());
 			} catch (SQLException ex) {
 				System.out.println("[iConomy] Error issueing SQL query: " + ex);
+				ex.printStackTrace();
 			} finally {
 				DbUtils.close(c);
 			}
 		} catch (SQLException ex) {
 			System.out.println("[iConomy] Database Error: " + ex);
+			ex.printStackTrace();
 		}
 	}
 
@@ -520,11 +782,13 @@ public class Queried {
 							run.batch(c, query, parameters);
 						} catch (SQLException ex) {
 							System.out.println("[iConomy] Error with batching: " + ex);
+							ex.printStackTrace();
 						} finally {
 							DbUtils.close(c);
 						}
 					} catch (SQLException ex) {
 						System.out.println("[iConomy] Database Error: " + ex);
+						ex.printStackTrace();
 					}
 				}
 			});
@@ -562,11 +826,13 @@ public class Queried {
 						run.update(c, "DELETE FROM " + t + " WHERE balance=?", Constants.Nodes.Balance.getDouble());
 					} catch (SQLException ex) {
 						System.out.println("[iConomy] Error issueing SQL query: " + ex);
+						ex.printStackTrace();
 					} finally {
 						DbUtils.close(c);
 					}
 				} catch (SQLException ex) {
 					System.out.println("[iConomy] Database Error: " + ex);
+					ex.printStackTrace();
 				}
 			}
 		});
@@ -614,11 +880,13 @@ public class Queried {
 						}
 					} catch (SQLException ex) {
 						System.out.println("[iConomy] Error issueing SQL query: " + ex);
+						ex.printStackTrace();
 					} finally {
 						DbUtils.close(c);
 					}
 				} catch (SQLException ex) {
 					System.out.println("[iConomy] Database Error: " + ex);
+					ex.printStackTrace();
 				}
 			}
 		});
@@ -654,11 +922,13 @@ public class Queried {
 						run.update(c, "TRUNCATE TABLE " + t);
 					} catch (SQLException ex) {
 						System.out.println("[iConomy] Error issueing SQL query: " + ex);
+						ex.printStackTrace();
 					} finally {
 						DbUtils.close(c);
 					}
 				} catch (SQLException ex) {
 					System.out.println("[iConomy] Database Error: " + ex);
+					ex.printStackTrace();
 				}
 			}
 		});
@@ -688,11 +958,13 @@ public class Queried {
 						status = run.query(c, "SELECT status FROM " + t + " WHERE username=?", returnStatus, name.toLowerCase());
 					} catch (SQLException ex) {
 						System.out.println("[iConomy] Error issueing SQL query: " + ex);
+						ex.printStackTrace();
 					} finally {
 						DbUtils.close(c);
 					}
 				} catch (SQLException ex) {
 					System.out.println("[iConomy] Database Error: " + ex);
+					ex.printStackTrace();
 				}
 
 				return status;
@@ -727,11 +999,13 @@ public class Queried {
 				run.update(c, "UPDATE " + t + " SET status=? WHERE username=?", status, name.toLowerCase());
 			} catch (SQLException ex) {
 				System.out.println("[iConomy] Error issueing SQL query: " + ex);
+				ex.printStackTrace();
 			} finally {
 				DbUtils.close(c);
 			}
 		} catch (SQLException ex) {
 			System.out.println("[iConomy] Database Error: " + ex);
+			ex.printStackTrace();
 		}
 	}
 }

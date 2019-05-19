@@ -388,7 +388,7 @@ public class QueryRunner {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         T result = null;
-
+                
         try {
             sql = conn.nativeSQL(sql);
             stmt = this.prepareStatement(conn, sql);

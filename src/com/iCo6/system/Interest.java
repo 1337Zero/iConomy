@@ -62,7 +62,7 @@ public class Interest extends TimerTask {
         }
 
         for(String name: players) {
-            if(!Accounts.exists(name))
+            if(!Accounts.existsOldMethode(name))
                 continue;
 
             Account account = new Account(name);

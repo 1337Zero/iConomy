@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -64,11 +65,12 @@ public class Constants {
 
         DatabaseType("System.Database.Type", "MiniDB"),
         DatabaseTable("System.Database.Table", "iConomy"),
+        DatabaseUUIDTable("System.Database.Table_UUID", "iConomy_UUID"),
         DatabaseUrl("System.Database.URL", "mysql:\\\\localhost:3306\\iConomy"),
         DatabaseUsername("System.Database.Username", "root"),
         DatabasePassword("System.Database.Password", ""),
-        DatabaseMajorItem("System.Database.MajorItem", 266),
-        DatabaseMinorItem("System.Database.MinorItem", 265),
+        DatabaseMajorItem("System.Database.MajorItem", "GOLD_INGOT"),
+        DatabaseMinorItem("System.Database.MinorItem", "IRON_INGOT"),
 
         Convert("System.Database.Conversion.Enabled", false),
         ConvertFrom("System.Database.Conversion.Type", "H2DB"),
@@ -81,7 +83,7 @@ public class Constants {
         String node;
         Object value;
 
-        private Nodes(String node, Object value) {
+        private Nodes(String node, Object value) {        	
             this.node = node;
             this.value = value;
         }

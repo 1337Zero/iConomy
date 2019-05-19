@@ -1,5 +1,7 @@
 package com.iCo6.system;
 
+import java.util.UUID;
+
 import org.bukkit.entity.Player;
 
 import com.iCo6.iConomy;
@@ -8,12 +10,18 @@ import com.iCo6.util.Template;
 
 public class Account {
     public String name;
+    public UUID uuid;
 
+    public Account(String name,UUID uuid) {
+        this.name = name;
+        this.uuid = uuid;
+    }
     public Account(String name) {
         this.name = name;
+        this.uuid = Queried.getUUID(name);
     }
 
-    public Account(String name, Boolean create) {
+    public Account(String name,UUID uuid, Boolean create) {
         this.name = name;
     }
 

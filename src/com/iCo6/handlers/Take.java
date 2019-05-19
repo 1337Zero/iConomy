@@ -46,7 +46,7 @@ public class Take extends Handler {
 		if(Double.isInfinite(amount) || Double.isNaN(amount))
 			throw new InvalidUsage("Invalid amount parameter, must be double.");
 
-		if(!Accounts.exists(name)) {
+		if(!Accounts.existsOldMethode(name)) {
 			template.set(Template.Node.ERROR_ACCOUNT);
 			template.add("name", name);
 

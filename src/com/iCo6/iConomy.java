@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.Locale;
 import java.util.Timer;
+import java.util.UUID;
 
 import org.bukkit.Server;
 import org.bukkit.command.Command;
@@ -184,7 +185,6 @@ public class iConomy extends JavaPlugin implements Listener {
 				if(!Database.tableExists(Constants.Nodes.DatabaseTable.toString())) {
 					String SQL = Common.resourceToString("SQL/Core/Create-Table-" + Database.getType().toString().toLowerCase() + ".sql");
 					SQL = String.format(SQL, Constants.Nodes.DatabaseTable.getValue());
-
 					try {
 						QueryRunner run = new QueryRunner();
 						Connection c = iConomy.Database.getConnection();
@@ -193,16 +193,39 @@ public class iConomy extends JavaPlugin implements Listener {
 							run.update(c, SQL);
 						} catch (SQLException ex) {
 							System.out.println("[iConomy] Error creating database: " + ex);
+							ex.printStackTrace();
 						} finally {
 							DbUtils.close(c);
 						}
 					} catch (SQLException ex) {
 						System.out.println("[iConomy] Database Error: " + ex);
+						ex.printStackTrace();
 					}
 				}
-			} else {
+				if(!Database.tableExists(Constants.Nodes.DatabaseUUIDTable.toString())) {
+					String SQL = Common.resourceToString("SQL/Core/Create-UUIDTable-" + Database.getType().toString().toLowerCase() + ".sql");
+					SQL = String.format(SQL, Constants.Nodes.DatabaseUUIDTable.getValue());
+							
+					try {
+						QueryRunner run = new QueryRunner();
+						Connection c = iConomy.Database.getConnection();
+
+						try{
+							run.update(c, SQL);
+						} catch (SQLException ex) {
+							System.out.println("[iConomy] Error creating database: " + ex);
+							ex.printStackTrace();
+						} finally {
+							DbUtils.close(c);
+						}
+					} catch (SQLException ex) {
+						System.out.println("[iConomy] Database Error: " + ex);
+						ex.printStackTrace();
+					}
+				}
+			}/* else {
 				this.onConversion();
-			}
+			}*/
 		} catch (Exception ex) {
 			System.out.println(ex.getMessage());
 		}
@@ -234,7 +257,7 @@ public class iConomy extends JavaPlugin implements Listener {
 		long endTime = System.currentTimeMillis();
 
 		// Finish
-		System.out.println("[" + getDescription().getName() + " - Celty] Enabled (" + (endTime - startTime) + " ms)");
+		System.out.println("[" + getDescription().getName() + " - Non April Fool Version] Enabled (" + (endTime - startTime) + " ms)");
 	}
 
 	public void onDisable() {
@@ -267,11 +290,16 @@ public class iConomy extends JavaPlugin implements Listener {
 		Player player = event.getPlayer();
 
 		if(player != null)
-			if(!accounts.exists(player.getName()))
-				accounts.create(player.getName());
+			if(!accounts.exists(player.getName(), player.getUniqueId())) {
+				accounts.create(player.getName(),player.getUniqueId());
+			}
+			/*if(!accounts.hasUUIDStored(player.getName(),player.getUniqueId())) {
+				accounts.
+			}*/
+				
 	}
 
-	public boolean onConversion() {
+	/*public boolean onConversion() {
 		if(!Constants.Nodes.Convert.getBoolean())
 			return false;
 
@@ -355,7 +383,7 @@ public class iConomy extends JavaPlugin implements Listener {
 		});
 
 		return false;
-	}
+	}*/
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -391,8 +419,8 @@ public class iConomy extends JavaPlugin implements Listener {
 	 * @param account The name of the account you wish to be formatted
 	 * @return String
 	 */
-	public static String format(String account) {
-		return Accounts.get(account).getHoldings().toString();
+	public static String format(String account,UUID uuid) {
+		return Accounts.get(account,uuid).getHoldings().toString();
 	}
 
 	/**
