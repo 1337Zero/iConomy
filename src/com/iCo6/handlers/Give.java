@@ -47,7 +47,7 @@ public class Give extends Handler {
         if(Double.isInfinite(amount) || Double.isNaN(amount))
             throw new InvalidUsage("Invalid <white>amount<rose>, must be double.");
 
-        if(!Accounts.existsOldMethode(name)) {
+        if(!Accounts.exists(name)) {
             template.set(Template.Node.ERROR_ACCOUNT);
             template.add("name", name);
 

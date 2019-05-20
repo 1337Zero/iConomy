@@ -12,6 +12,8 @@ public class Account {
     public String name;
     public UUID uuid;
 
+    
+    
     public Account(String name,UUID uuid) {
         this.name = name;
         this.uuid = uuid;

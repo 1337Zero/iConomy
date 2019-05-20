@@ -40,7 +40,7 @@ public class Status extends Handler {
         if(name.equals("0"))
             throw new InvalidUsage("Missing <white>name<rose>: /money status <name> (new status)");
 
-        if(!Accounts.existsOldMethode(name)) {
+        if(!Accounts.exists(name)) {
             template.set(Template.Node.ERROR_ACCOUNT);
             template.add("name", name);
 

@@ -63,7 +63,7 @@ public class Payment extends Handler {
             return false;
         }
 
-        if(!Accounts.existsOldMethode(name)) {
+        if(!Accounts.exists(name)) {
             template.set(Template.Node.ERROR_ACCOUNT);
             template.add("name", name);
 

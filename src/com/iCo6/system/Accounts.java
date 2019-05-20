@@ -26,7 +26,12 @@ public class Accounts {
     	}
         return Queried.hasAccount(name);
     }
-    public boolean existsOldMethode(String name) {
+    /**
+     * Old methode, here so it wont break vault/other plugins
+     * @param name
+     * @return
+     */
+    public boolean exists(String name) {
         return Queried.hasAccount(name);
     }
 
@@ -37,6 +42,9 @@ public class Accounts {
         	this.create(name,uuid);
         }
         return new Account(name,uuid);
+    }
+    public Account get(String name) {
+        return new Account(name);
     }
 
     public List<Account> getTopAccounts(int amount) {
